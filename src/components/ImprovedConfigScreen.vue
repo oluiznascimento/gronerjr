@@ -297,10 +297,10 @@
           </div>
         </q-card>
       </transition-group>
-    </q-list>
+    </q-list
     <div v-else class="text-center q-mt-lg">
       <q-icon name="info" size="lg" color="grey-6" />
-      <p class="text-grey-6 q-mt-sm">Nenhum campo encontrado para os filtros aplicados.</p>
+      <p class="text-grey-6 q-mt-sm">Nenhum campo encontrado para os filtros aplicados!</p>
     </div>
 
     <q-dialog v-model="showOptionModalFlag" persistent>
