@@ -129,7 +129,7 @@
       </q-card>
     </q-dialog>
 
-    <q-list v-if="filteredSections.length > 0" class="column q-gutter-md">
+    <q-list v-if="filteredSections.length > 0" class="column q-gutter-xl">
       <transition-group name="list" tag="div">
         <q-card
           v-for="(section, index) in filteredSections"
@@ -141,10 +141,9 @@
             round
             flat
             icon="delete"
-            color="primary"
-            @click="deleteSection(section, index)"
-            class="absolute"
+            class="absolute delete-btn"
             style="bottom: 12px; right: 12px"
+            @click="confirmDeleteSection(section, index)"
           >
             <q-tooltip>Excluir Campo</q-tooltip>
           </q-btn>
@@ -261,7 +260,7 @@
             </div>
           </div>
 
-          <div v-if="section.options" class="row q-mt-md">
+          <div class="row q-mt-md">
             <div class="col-12">
               <q-chip
                 v-for="(option, optIndex) in section.options"
@@ -269,7 +268,8 @@
                 :label="option"
                 clickable
                 outlined
-                color="white"
+                color="primary"
+                text-color="white"
                 class="q-mr-sm q-mb-sm custom-chip"
               >
                 <q-btn
@@ -279,7 +279,7 @@
                   icon="close"
                   color="white"
                   size="sm"
-                  @click="deleteOption(section, optIndex)"
+                  @click="confirmDeleteOption(section, optIndex)"
                 >
                   <q-tooltip>Excluir Opção</q-tooltip>
                 </q-btn>
@@ -290,6 +290,7 @@
                 flat
                 icon="add"
                 class="add-option-btn"
+                text-color="white"
                 @click="showOptionModal(index)"
               />
             </div>
@@ -331,6 +332,54 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+
+    <!-- Modal de Confirmação para Deletar Campo -->
+    <q-dialog v-model="showDeleteSectionModal" persistent>
+      <q-card style="min-width: 400px; border-radius: 12px">
+        <q-card-section class="bg-red-9 text-white">
+          <div class="text-h6">Confirmar Exclusão de Campo</div>
+        </q-card-section>
+        <q-card-section class="q-pt-none">
+          <p class="q-mt-md">
+            Você está prestes a excluir o campo "<strong>{{ sectionToDelete?.name }}</strong
+            >". Esta ação é <strong>permanente</strong> e não pode ser desfeita. Deseja continuar?
+          </p>
+        </q-card-section>
+        <q-card-actions align="right" class="q-pa-md">
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
+          <q-btn
+            color="red-9"
+            label="Excluir Permanentemente"
+            unelevated
+            @click="deleteSectionConfirmed"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <!-- Modal de Confirmação para Deletar Opção -->
+    <q-dialog v-model="showDeleteOptionModal" persistent>
+      <q-card style="min-width: 400px; border-radius: 12px">
+        <q-card-section class="bg-red-9 text-white">
+          <div class="text-h6">Confirmar Exclusão de Opção</div>
+        </q-card-section>
+        <q-card-section class="q-pt-none">
+          <p class="q-mt-md">
+            Você está prestes a excluir a opção "<strong>{{ optionToDelete?.label }}</strong
+            >". Esta ação é <strong>permanente</strong> e não pode ser desfeita. Deseja continuar?
+          </p>
+        </q-card-section>
+        <q-card-actions align="right" class="q-pa-md">
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
+          <q-btn
+            color="red-9"
+            label="Excluir Permanentemente"
+            unelevated
+            @click="deleteOptionConfirmed"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -342,8 +391,14 @@ export default {
       selectedType: null,
       showModal: false,
       showOptionModalFlag: false,
+      showDeleteSectionModal: false,
+      showDeleteOptionModal: false,
       currentSectionIndex: null,
       newOption: '',
+      sectionToDelete: null,
+      sectionIndexToDelete: null,
+      optionToDelete: null,
+      optionIndexToDelete: null,
       typeOptions: [
         'Arquivo',
         'Assinatura',
@@ -381,6 +436,7 @@ export default {
           order: '1',
           viewPermission: 'Administrador',
           editPermission: 'Administrador',
+          options: [],
         },
         {
           name: 'Albânia',
@@ -409,6 +465,7 @@ export default {
           options: ['Pequeno', 'Novo', 'Fácil de achar'],
         },
       ],
+      filteredSections: [],
     }
   },
   computed: {
@@ -436,10 +493,9 @@ export default {
             section.code.toLowerCase().includes(searchLower),
         )
       }
-      // Ordenar os campos com base no valor de "order"
       filtered.sort((a, b) => {
-        const orderA = parseInt(a.order) || 0
-        const orderB = parseInt(b.order) || 0
+        const orderA = parseInt(a.order, 10) || 0
+        const orderB = parseInt(b.order, 10) || 0
         return orderA - orderB
       })
       this.filteredSections = filtered
@@ -447,37 +503,46 @@ export default {
     saveSection(section) {
       const originalIndex = this.sections.findIndex((s) => s.code === section.code)
       if (originalIndex !== -1) {
+        section.order = parseInt(section.order, 10).toString()
         this.sections[originalIndex] = { ...section }
         this.applyFilters()
       }
     },
     toggleStepStatus(section) {
-      if (section.isStep) {
-        section.stepField = ''
-        section.statusField = ''
-      } else {
-        section.stepField = ''
-        section.statusField = ''
-        section.options = []
-      }
+      section.stepField = ''
+      section.statusField = ''
       this.saveSection(section)
     },
-    deleteSection(section, index) {
-      this.$q
-        .dialog({
-          title: 'Confirmar Exclusão',
-          message: `Tem certeza que deseja excluir o campo "${section.name}"?`,
-          cancel: true,
-          persistent: true,
-        })
-        .onOk(() => {
-          const originalIndex = this.sections.findIndex((s) => s.code === section.code)
-          if (originalIndex !== -1) {
-            this.sections.splice(originalIndex, 1)
-            this.filteredSections.splice(index, 1)
-            this.applyFilters()
-          }
-        })
+    confirmDeleteSection(section, index) {
+      this.sectionToDelete = section
+      this.sectionIndexToDelete = index
+      this.showDeleteSectionModal = true
+    },
+    deleteSectionConfirmed() {
+      const originalIndex = this.sections.findIndex((s) => s.code === this.sectionToDelete.code)
+      if (originalIndex !== -1) {
+        this.sections.splice(originalIndex, 1)
+        this.filteredSections.splice(this.sectionIndexToDelete, 1)
+        this.applyFilters()
+      }
+      this.showDeleteSectionModal = false
+      this.sectionToDelete = null
+      this.sectionIndexToDelete = null
+    },
+    confirmDeleteOption(section, optionIndex) {
+      this.optionToDelete = { label: section.options[optionIndex], section }
+      this.optionIndexToDelete = optionIndex
+      this.showDeleteOptionModal = true
+    },
+    deleteOptionConfirmed() {
+      const originalSection = this.sections.find((s) => s.code === this.optionToDelete.section.code)
+      if (originalSection) {
+        originalSection.options.splice(this.optionIndexToDelete, 1)
+        this.applyFilters()
+      }
+      this.showDeleteOptionModal = false
+      this.optionToDelete = null
+      this.optionIndexToDelete = null
     },
     showOptionModal(sectionIndex) {
       this.currentSectionIndex = sectionIndex
@@ -485,31 +550,14 @@ export default {
     },
     addOption() {
       if (!this.newOption) return
-      const originalIndex = this.sections.findIndex(
-        (section) => section.name === this.filteredSections[this.currentSectionIndex].name,
-      )
+      const section = this.filteredSections[this.currentSectionIndex]
+      const originalIndex = this.sections.findIndex((s) => s.code === section.code)
       if (originalIndex !== -1) {
         this.sections[originalIndex].options.push(this.newOption)
         this.applyFilters()
         this.showOptionModalFlag = false
         this.resetNewOption()
       }
-    },
-    deleteOption(section, optionIndex) {
-      this.$q
-        .dialog({
-          title: 'Confirmar Exclusão',
-          message: `Tem certeza que deseja excluir a opção "${section.options[optionIndex]}"?`,
-          cancel: true,
-          persistent: true,
-        })
-        .onOk(() => {
-          const originalSection = this.sections.find((s) => s.code === section.code)
-          if (originalSection) {
-            originalSection.options.splice(optionIndex, 1)
-            this.applyFilters()
-          }
-        })
     },
     resetNewOption() {
       this.newOption = ''
@@ -534,11 +582,10 @@ export default {
         stepField: '',
         statusField: '',
         code: this.newField.name.toLowerCase().replace(/\s+/g, '_'),
-        order: this.newField.order,
+        order: parseInt(this.newField.order, 10).toString(),
         viewPermission: this.newField.viewPermission,
         editPermission: this.newField.editPermission,
-        options:
-          this.newField.type === 'Check List' || this.newField.type === 'Rádio' ? [] : undefined,
+        options: [],
       }
       this.sections.push(newSection)
       this.applyFilters()
@@ -566,6 +613,7 @@ h5 {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   background: #fff;
   transition: transform 0.2s ease-in-out;
+  margin: 16px 0;
 }
 .custom-card:hover {
   transform: translateY(-4px);
@@ -621,11 +669,26 @@ h5 {
 .add-option-btn .q-icon {
   color: #266563 !important;
 }
+.delete-btn {
+  background: linear-gradient(90deg, #266563 0%, #3b8a88 100%);
+  color: #fff !important;
+}
+.delete-btn .q-icon {
+  color: #fff !important;
+}
 .bg-primary {
   background: #266563 !important;
 }
-.q-icon,
+.q-icon {
+  color: #266563 !important;
+}
 .q-toggle {
+  color: #266563 !important;
+}
+.q-toggle .q-toggle__inner {
+  color: #266563 !important;
+}
+.q-toggle .q-toggle__inner--truthy {
   color: #266563 !important;
 }
 @media (max-width: 600px) {
@@ -637,7 +700,6 @@ h5 {
   }
 }
 
-/* Animação para a troca de ordem dos campos */
 .list-move,
 .list-enter-active,
 .list-leave-active {
