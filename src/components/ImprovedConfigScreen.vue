@@ -506,7 +506,7 @@ export default {
           order: '2',
           viewPermission: 'Administrador',
           editPermission: 'Administrador',
-          options: ['opção 1', 'opção 2', 'opção 3'],
+          options: ['Bandeira foda', 'águia de duas cabeças', 'rubronegro'],
           enabled: true,
           numericValue: '',
         },
