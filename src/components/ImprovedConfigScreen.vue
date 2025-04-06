@@ -136,7 +136,16 @@
           :key="section.code"
           class="custom-card q-pa-md relative-position"
           style="border-radius: 16px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05)"
+          :class="{ 'disabled-card': !section.enabled }"
         >
+          <q-toggle
+            v-model="section.enabled"
+            color="primary"
+            label="Ativar Campo"
+            class="absolute"
+            style="top: 12px; left: 12px"
+            @update:model-value="saveSection(section)"
+          />
           <q-btn
             round
             flat
@@ -157,6 +166,7 @@
                 dense
                 class="custom-input"
                 @blur="saveSection(section)"
+                :disable="!section.enabled"
               />
             </div>
             <div class="col-12 col-md-2">
@@ -168,23 +178,38 @@
                 dense
                 class="custom-select"
                 @update:model-value="saveSection(section)"
+                :disable="!section.enabled"
               />
             </div>
             <div class="col-12 col-md-3 flex items-center">
+              <q-btn
+                round
+                :color="section.isStep ? 'primary' : 'grey-5'"
+                size="sm"
+                class="q-mr-sm"
+                @click="toggleStepStatus(section, true)"
+                :disable="!section.enabled"
+              >
+                <q-icon name="circle" />
+              </q-btn>
               <div
                 class="text-subtitle2 q-mr-sm"
                 :style="{ color: section.isStep ? '#266563' : '#888' }"
               >
                 Etapa
               </div>
-              <q-toggle
-                v-model="section.isStep"
-                color="primary"
-                keep-color
-                @update:model-value="toggleStepStatus(section)"
-              />
+              <q-btn
+                round
+                :color="!section.isStep ? 'primary' : 'grey-5'"
+                size="sm"
+                class="q-mr-sm"
+                @click="toggleStepStatus(section, false)"
+                :disable="!section.enabled"
+              >
+                <q-icon name="circle" />
+              </q-btn>
               <div
-                class="text-subtitle2 q-ml-sm q-mr-sm"
+                class="text-subtitle2 q-mr-sm"
                 :style="{ color: !section.isStep ? '#266563' : '#888' }"
               >
                 Status
@@ -199,6 +224,7 @@
                 class="custom-select"
                 style="width: 292px"
                 @update:model-value="saveSection(section)"
+                :disable="!section.enabled"
               />
               <q-select
                 v-if="!section.isStep"
@@ -210,17 +236,29 @@
                 class="custom-select"
                 style="width: 292px"
                 @update:model-value="saveSection(section)"
+                :disable="!section.enabled"
               />
             </div>
-            <div class="col-12 col-md-2">
+            <div class="col-12 col-md-2 flex items-center">
               <q-input
                 v-model="section.code"
                 label="Código"
                 outlined
                 dense
                 class="custom-input"
-                @blur="saveSection(section)"
+                readonly
+                :disable="!section.enabled"
               />
+              <q-btn
+                round
+                flat
+                icon="content_copy"
+                class="q-ml-sm"
+                @click="copyCode(section.code)"
+                :disable="!section.enabled"
+              >
+                <q-tooltip>Copiar Código</q-tooltip>
+              </q-btn>
             </div>
             <div class="col-12 col-md-1">
               <q-input
@@ -231,6 +269,7 @@
                 type="number"
                 class="custom-input"
                 @blur="saveSection(section)"
+                :disable="!section.enabled"
               />
             </div>
           </div>
@@ -245,6 +284,7 @@
                 dense
                 class="custom-select"
                 @update:model-value="saveSection(section)"
+                :disable="!section.enabled"
               />
             </div>
             <div class="col-12 col-md-4">
@@ -256,43 +296,60 @@
                 dense
                 class="custom-select"
                 @update:model-value="saveSection(section)"
+                :disable="!section.enabled"
               />
             </div>
           </div>
 
           <div class="row q-mt-md">
             <div class="col-12">
-              <q-chip
-                v-for="(option, optIndex) in section.options"
-                :key="optIndex"
-                :label="option"
-                clickable
-                outlined
-                color="primary"
-                text-color="white"
-                class="q-mr-sm q-mb-sm custom-chip"
-              >
-                <q-btn
-                  round
-                  flat
+              <div v-if="section.type === 'Número' || section.type === 'Fórmula'">
+                <q-input
+                  v-model="section.numericValue"
+                  label="Valor Numérico por Extenso"
+                  outlined
                   dense
-                  icon="close"
-                  color="white"
-                  size="sm"
-                  @click="confirmDeleteOption(section, optIndex)"
+                  class="custom-input"
+                  @blur="saveSection(section)"
+                  :disable="!section.enabled"
+                />
+              </div>
+              <div v-else>
+                <q-chip
+                  v-for="(option, optIndex) in section.options"
+                  :key="optIndex"
+                  :label="option"
+                  clickable
+                  outlined
+                  color="primary"
+                  text-color="white"
+                  class="q-mr-sm q-mb-sm custom-chip"
+                  :disable="!section.enabled"
                 >
-                  <q-tooltip>Excluir Opção</q-tooltip>
-                </q-btn>
-              </q-chip>
-              <q-btn
-                color="primary"
-                label="Adicionar Opção"
-                flat
-                icon="add"
-                class="add-option-btn"
-                text-color="white"
-                @click="showOptionModal(index)"
-              />
+                  <q-btn
+                    round
+                    flat
+                    dense
+                    icon="close"
+                    color="white"
+                    size="sm"
+                    @click="confirmDeleteOption(section, optIndex)"
+                    :disable="!section.enabled"
+                  >
+                    <q-tooltip>Excluir Opção</q-tooltip>
+                  </q-btn>
+                </q-chip>
+                <q-btn
+                  color="primary"
+                  label="Adicionar Opção"
+                  flat
+                  icon="add"
+                  class="add-option-btn"
+                  text-color="white"
+                  @click="showOptionModal(index)"
+                  :disable="!section.enabled"
+                />
+              </div>
             </div>
           </div>
         </q-card>
@@ -432,11 +489,13 @@ export default {
           isStep: true,
           stepField: '',
           statusField: '',
-          code: 'greece',
+          code: '[[Grécia]]',
           order: '1',
           viewPermission: 'Administrador',
           editPermission: 'Administrador',
           options: [],
+          enabled: true,
+          numericValue: '',
         },
         {
           name: 'Albânia',
@@ -445,11 +504,13 @@ export default {
           isStep: true,
           stepField: '',
           statusField: '',
-          code: 'albania',
+          code: '[[Albânia]]',
           order: '2',
           viewPermission: 'Administrador',
           editPermission: 'Administrador',
           options: ['opção 1', 'opção 2', 'opção 3'],
+          enabled: true,
+          numericValue: '',
         },
         {
           name: 'Kosovo',
@@ -458,11 +519,13 @@ export default {
           isStep: true,
           stepField: '',
           statusField: '',
-          code: 'witheggs',
+          code: '[[Kosovo]]',
           order: '3',
           viewPermission: 'Administrador',
           editPermission: 'Administrador',
           options: ['Pequeno', 'Novo', 'Fácil de achar'],
+          enabled: true,
+          numericValue: '',
         },
       ],
       filteredSections: [],
@@ -504,11 +567,13 @@ export default {
       const originalIndex = this.sections.findIndex((s) => s.code === section.code)
       if (originalIndex !== -1) {
         section.order = parseInt(section.order, 10).toString()
+        section.code = `[[${section.name}]]` // Atualiza o código com base no nome
         this.sections[originalIndex] = { ...section }
         this.applyFilters()
       }
     },
-    toggleStepStatus(section) {
+    toggleStepStatus(section, isStep) {
+      section.isStep = isStep
       section.stepField = ''
       section.statusField = ''
       this.saveSection(section)
@@ -581,16 +646,27 @@ export default {
         isStep: false,
         stepField: '',
         statusField: '',
-        code: this.newField.name.toLowerCase().replace(/\s+/g, '_'),
+        code: `[[${this.newField.name}]]`,
         order: parseInt(this.newField.order, 10).toString(),
         viewPermission: this.newField.viewPermission,
         editPermission: this.newField.editPermission,
         options: [],
+        enabled: true,
+        numericValue: '',
       }
       this.sections.push(newSection)
       this.applyFilters()
       this.showModal = false
       this.resetNewField()
+    },
+    copyCode(code) {
+      navigator.clipboard.writeText(code).then(() => {
+        this.$q.notify({
+          message: 'Código copiado com sucesso!',
+          color: 'positive',
+          position: 'top',
+        })
+      })
     },
   },
   created() {
@@ -617,6 +693,9 @@ h5 {
 }
 .custom-card:hover {
   transform: translateY(-4px);
+}
+.custom-card.disabled-card {
+  opacity: 0.5;
 }
 .custom-input,
 .custom-select {
