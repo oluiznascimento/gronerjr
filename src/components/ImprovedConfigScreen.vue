@@ -12,7 +12,7 @@
             <q-select
               v-model="selectedType"
               :options="typeOptions"
-              label="Filtrar por Tipo"
+              label="Filtrar por Tipo de Interpolação"
               outlined
               dense
               clearable
@@ -242,7 +242,7 @@
             <div class="col-12 col-md-2 flex items-center">
               <q-input
                 v-model="section.code"
-                label="Código"
+                label="Interpolação"
                 outlined
                 dense
                 class="custom-input"
@@ -487,7 +487,7 @@ export default {
           isStep: true,
           stepField: '',
           statusField: '',
-          code: '[[Grécia]]',
+          code: '[[Grecia]]',
           order: '1',
           viewPermission: 'Administrador',
           editPermission: 'Administrador',
@@ -502,7 +502,7 @@ export default {
           isStep: true,
           stepField: '',
           statusField: '',
-          code: '[[Albânia]]',
+          code: '[[Albania]]',
           order: '2',
           viewPermission: 'Administrador',
           editPermission: 'Administrador',
@@ -541,6 +541,12 @@ export default {
     },
   },
   methods: {
+    normalizeString(str) {
+      return str
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, '')
+    },
     applyFilters() {
       let filtered = [...this.sections]
       if (this.selectedType) {
@@ -565,12 +571,11 @@ export default {
       const originalIndex = this.sections.findIndex((s) => s.code === section.code)
       if (originalIndex !== -1) {
         section.order = parseInt(section.order, 10).toString()
-        section.code = `[[${section.name}]]`
+        section.code = `[[${this.normalizeString(section.name)}]]`
         this.sections[originalIndex] = { ...section }
         this.applyFilters()
       }
     },
-
     toggleStepStatus(section, isStep) {
       section.isStep = isStep
       section.stepField = ''
@@ -645,7 +650,7 @@ export default {
         isStep: false,
         stepField: '',
         statusField: '',
-        code: `[[${this.newField.name}]]`,
+        code: `[[${this.normalizeString(this.newField.name)}]]`,
         order: parseInt(this.newField.order, 10).toString(),
         viewPermission: this.newField.viewPermission,
         editPermission: this.newField.editPermission,
@@ -752,7 +757,7 @@ h5 {
 }
 .delete-btn {
   background: linear-gradient(90deg, #266563 0%, #3b8a88 100%);
-  color: #fff !important ;
+  color: #fff !important;
 }
 .delete-btn .q-icon {
   color: #fff !important;
@@ -804,7 +809,6 @@ h5 {
     padding: 6px 12px;
   }
 }
-
 .list-move,
 .list-enter-active,
 .list-leave-active {
