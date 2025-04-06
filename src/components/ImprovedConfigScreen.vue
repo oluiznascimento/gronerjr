@@ -12,7 +12,7 @@
             <q-select
               v-model="selectedType"
               :options="typeOptions"
-              label="Filtrar por Tipo de Interpolação"
+              label="Filtrar por Tipo de Campo"
               outlined
               dense
               clearable
