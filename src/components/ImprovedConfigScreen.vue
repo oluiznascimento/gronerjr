@@ -140,10 +140,10 @@
         >
           <q-toggle
             v-model="section.enabled"
-            color="primary"
+            color="green"
             label="Ativar Campo"
-            class="absolute"
-            style="top: 12px; left: 12px"
+            class="absolute custom-toggle"
+            style="top: 8px; left: 8px"
             @update:model-value="saveSection(section)"
           />
           <q-btn
@@ -157,7 +157,7 @@
             <q-tooltip>Excluir Campo</q-tooltip>
           </q-btn>
 
-          <div class="row items-center q-col-gutter-md">
+          <div class="row items-center q-col-gutter-md" style="margin-top: 40px">
             <div class="col-12 col-md-4">
               <q-input
                 v-model="section.name"
@@ -184,13 +184,13 @@
             <div class="col-12 col-md-3 flex items-center">
               <q-btn
                 round
-                :color="section.isStep ? 'primary' : 'grey-5'"
-                size="sm"
-                class="q-mr-sm"
+                :color="section.isStep ? 'green' : 'grey-5'"
+                size="xs"
+                class="q-mr-sm small-btn"
                 @click="toggleStepStatus(section, true)"
                 :disable="!section.enabled"
               >
-                <q-icon name="circle" />
+                <q-icon name="circle" size="12px" />
               </q-btn>
               <div
                 class="text-subtitle2 q-mr-sm"
@@ -200,13 +200,13 @@
               </div>
               <q-btn
                 round
-                :color="!section.isStep ? 'primary' : 'grey-5'"
-                size="sm"
-                class="q-mr-sm"
+                :color="!section.isStep ? 'green' : 'grey-5'"
+                size="xs"
+                class="q-mr-sm small-btn"
                 @click="toggleStepStatus(section, false)"
                 :disable="!section.enabled"
               >
-                <q-icon name="circle" />
+                <q-icon name="circle" size="12px" />
               </q-btn>
               <div
                 class="text-subtitle2 q-mr-sm"
@@ -306,11 +306,11 @@
               <div v-if="section.type === 'Número' || section.type === 'Fórmula'">
                 <q-input
                   v-model="section.numericValue"
-                  label="Valor Numérico por Extenso"
+                  label="Campo Valor Numérico"
                   outlined
                   dense
-                  class="custom-input"
-                  @blur="saveSection(section)"
+                  class="custom-input numeric-input"
+                  @blur="validateNumericValue(section)"
                   :disable="!section.enabled"
                 />
               </div>
@@ -357,7 +357,7 @@
     </q-list>
     <div v-else class="text-center q-mt-lg">
       <q-icon name="info" size="lg" color="grey-6" />
-      <p class="text-grey-6 q-mt-sm">Nenhum campo encontrado para os filtros aplicados!.</p>
+      <p class="text-grey-6 q-mt-sm">Nenhum campo encontrado para os filtros aplicados!</p>
     </div>
 
     <q-dialog v-model="showOptionModalFlag" persistent>
@@ -390,7 +390,6 @@
       </q-card>
     </q-dialog>
 
-    <!-- Modal de Confirmação para Deletar Campo -->
     <q-dialog v-model="showDeleteSectionModal" persistent>
       <q-card style="min-width: 400px; border-radius: 12px">
         <q-card-section class="bg-red-9 text-white">
@@ -414,7 +413,6 @@
       </q-card>
     </q-dialog>
 
-    <!-- Modal de Confirmação para Deletar Opção -->
     <q-dialog v-model="showDeleteOptionModal" persistent>
       <q-card style="min-width: 400px; border-radius: 12px">
         <q-card-section class="bg-red-9 text-white">
@@ -567,11 +565,12 @@ export default {
       const originalIndex = this.sections.findIndex((s) => s.code === section.code)
       if (originalIndex !== -1) {
         section.order = parseInt(section.order, 10).toString()
-        section.code = `[[${section.name}]]` // Atualiza o código com base no nome
+        section.code = `[[${section.name}]]`
         this.sections[originalIndex] = { ...section }
         this.applyFilters()
       }
     },
+
     toggleStepStatus(section, isStep) {
       section.isStep = isStep
       section.stepField = ''
@@ -706,6 +705,9 @@ h5 {
 .custom-select .q-field__control {
   border: 1px solid #e0e0e0;
 }
+.numeric-input {
+  width: 1760px;
+}
 .filter-select,
 .search-input {
   background-color: #fff;
@@ -750,7 +752,7 @@ h5 {
 }
 .delete-btn {
   background: linear-gradient(90deg, #266563 0%, #3b8a88 100%);
-  color: #fff !important;
+  color: #fff !important ;
 }
 .delete-btn .q-icon {
   color: #fff !important;
@@ -769,6 +771,30 @@ h5 {
 }
 .q-toggle .q-toggle__inner--truthy {
   color: #266563 !important;
+}
+.custom-toggle {
+  font-size: 12px;
+}
+.custom-toggle .q-toggle__label {
+  font-size: 12px;
+}
+.small-btn {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
+  padding: 0;
+  border: 1px solid #ccc;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+.small-btn:hover {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+.q-btn.small-btn[disabled] {
+  background: #e0e0e0 !important;
+  border-color: #d0d0d0 !important;
+  box-shadow: none !important;
 }
 @media (max-width: 600px) {
   h5 {
