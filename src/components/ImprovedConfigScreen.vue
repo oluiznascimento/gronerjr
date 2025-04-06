@@ -28,7 +28,7 @@
           <div class="col-12 col-md-4">
             <q-input
               v-model="search"
-              placeholder="Pesquisar por Nome ou Código..."
+              placeholder="Pesquisar por Nome ou Interpolação..."
               clearable
               outlined
               dense
