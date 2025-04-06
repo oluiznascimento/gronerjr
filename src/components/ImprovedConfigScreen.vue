@@ -181,7 +181,7 @@
                 :disable="!section.enabled"
               />
             </div>
-            <div class="col-12 col-md-3 flex items-center">
+            <div class="col-12 col-md-3 flex items-center step-status-container">
               <q-btn
                 round
                 :color="section.isStep ? 'green' : 'grey-5'"
@@ -340,6 +340,7 @@
                   </q-btn>
                 </q-chip>
                 <q-btn
+                  v-if="section.type === 'Rádio' || section.type === 'Check List'"
                   color="primary"
                   label="Adicionar Opção"
                   flat
@@ -694,6 +695,8 @@ h5 {
   background: #fff;
   transition: transform 0.2s ease-in-out;
   margin: 16px 0;
+  position: relative;
+  padding-bottom: 48px;
 }
 .custom-card:hover {
   transform: translateY(-4px);
@@ -807,6 +810,38 @@ h5 {
   }
   .custom-btn {
     padding: 6px 12px;
+  }
+  .custom-card {
+    padding-bottom: 60px;
+  }
+  .delete-btn {
+    bottom: 12px;
+    right: 12px;
+  }
+  .step-status-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .step-status-container .q-btn,
+  .step-status-container .text-subtitle2,
+  .step-status-container .custom-select {
+    margin-bottom: 8px;
+  }
+  .step-status-container .custom-select {
+    width: 100%;
+  }
+  .row.q-mt-md.q-col-gutter-md {
+    flex-direction: column;
+  }
+  .row.q-mt-md.q-col-gutter-md > div {
+    margin-bottom: 16px;
+  }
+  .row.q-mt-md {
+    flex-direction: column;
+  }
+  .custom-chip {
+    margin-bottom: 8px;
   }
 }
 .list-move,
